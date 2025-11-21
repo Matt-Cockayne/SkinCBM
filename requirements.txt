@@ -1,0 +1,34 @@
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Data and preprocessing
+pillow>=10.0.0
+scikit-learn>=1.3.0
+scikit-image>=0.21.0
+opencv-python>=4.8.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Information theory
+scipy>=1.11.0
+
+# Progress and logging
+tqdm>=4.65.0
+tensorboard>=2.13.0
+
+# Model architectures
+timm>=0.9.0  # For pretrained vision models
+
+# Notebooks
+jupyter>=1.0.0
+ipywidgets>=8.0.0
+
+# Utilities
+pyyaml>=6.0
+h5py>=3.9.0

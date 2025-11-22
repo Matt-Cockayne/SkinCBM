@@ -96,8 +96,7 @@ python3 examples/train_basic_cbm.py \
     --learning_rate 1e-4 \
     --concept_loss_weight 1.0 \
     --output_dir "$OUTPUT_DIR" \
-    --random_seed 42 \
-    --run_information_analysis
+    --random_seed 42
 
 EXIT_CODE=$?
 

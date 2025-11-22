@@ -24,7 +24,6 @@ import torch
 from src.models.basic_cbm import ConceptBottleneckModel
 from src.data.derm7pt_adapter import create_derm7pt_dataloaders
 from src.training.trainer import CBMTrainer
-from src.utils.information_theory import analyze_cbm_information, print_information_analysis
 
 
 def parse_args():
@@ -56,10 +55,6 @@ def parse_args():
                        help='Directory to save outputs')
     parser.add_argument('--random_seed', type=int, default=42,
                        help='Random seed for reproducibility')
-    
-    # Analysis args
-    parser.add_argument('--run_information_analysis', action='store_true',
-                       help='Run information-theoretic analysis after training')
     
     return parser.parse_args()
 
@@ -96,6 +91,7 @@ def main():
     model = ConceptBottleneckModel(
         num_concepts=num_concepts,
         num_classes=num_classes,
+        num_classes_per_concept=3,  # Derm7pt has 3-class concepts (absent/regular/irregular)
         backbone=args.backbone,
         pretrained=True
     )
@@ -144,61 +140,12 @@ def main():
     
     print(f"\nResults saved to {results_file}")
     
-    # Information-theoretic analysis
-    if args.run_information_analysis:
-        print("\n" + "=" * 70)
-        print("Running information-theoretic analysis...")
-        print("=" * 70 + "\n")
-        
-        try:
-            # Load best model
-            best_model_path = os.path.join(args.output_dir, 'best_model.pth')
-            model = ConceptBottleneckModel.load(best_model_path, device=device)
-            
-            # Analyze
-            analysis = analyze_cbm_information(
-                model=model,
-                dataloader=test_loader,
-                device=device,
-                concept_names=test_loader.dataset.get_concept_names()
-            )
-            
-            # Print results
-            print_information_analysis(analysis)
-            
-            # Save analysis
-            import json
-            analysis_file = os.path.join(args.output_dir, 'information_analysis.json')
-            
-            # Convert numpy types to Python types for JSON serialization
-            def convert_to_serializable(obj):
-                if isinstance(obj, dict):
-                    return {k: convert_to_serializable(v) for k, v in obj.items()}
-                elif isinstance(obj, (list, tuple)):
-                    return [convert_to_serializable(item) for item in obj]
-                elif hasattr(obj, 'item'):  # numpy types
-                    return obj.item()
-                else:
-                    return obj
-            
-            serializable_analysis = convert_to_serializable(analysis)
-            
-            with open(analysis_file, 'w') as f:
-                json.dump(serializable_analysis, f, indent=2)
-            
-            print(f"\nAnalysis saved to {analysis_file}")
-        except Exception as e:
-            print(f"\n⚠️  Warning: Information analysis failed: {e}")
-            print("Training results are still saved successfully.")
-    
     print("\n" + "=" * 70)
     print("Training complete! 🎉")
     print("=" * 70)
     print(f"\nOutputs saved to: {args.output_dir}")
     print(f"  - best_model.pth: Best model checkpoint")
     print(f"  - results.txt: Test set metrics")
-    if args.run_information_analysis:
-        print(f"  - information_analysis.json: Information theory metrics")
 
 
 if __name__ == '__main__':

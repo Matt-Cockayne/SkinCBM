@@ -11,13 +11,13 @@ A clean, educational implementation of Concept Bottleneck Models (CBMs) for skin
 CBMs are neural networks with a two-stage architecture that forces all reasoning through interpretable concepts:
 
 ```
-Image → Concepts → Diagnosis
+Image → Concepts → Diagnosis Prediction
          ↓
     Interpretable!
     (can intervene here)
 ```
 
-**Example**: Instead of directly predicting "malignant", the model first identifies:
+**Example**: Instead of directly predicting "Melanoma", the model first identifies:
 - Irregular border: 92%
 - Asymmetric shape: 78%
 - Blue-white veil: 15% ← **You can correct this!**
@@ -43,8 +43,12 @@ Try the CBM on 3 sample dermoscopy images:
 # Run inference demo
 python3 examples/demo_sample_data.py
 
-# Or use the interactive notebook
+# Test concept intervention
+python3 examples/demo_intervention.py
+
+# Or use the interactive notebooks
 jupyter notebook notebooks/02_demo_with_sample_data.ipynb
+jupyter notebook notebooks/03_demo_intervention.ipynb
 ```
 
 This will show you:
@@ -128,11 +132,14 @@ SkinCBM/
 │
 ├── examples/
 │   ├── train_basic_cbm.py            # Train on full dataset
-│   └── demo_sample_data.py           # Quick demo with 3 samples
+│   ├── demo_sample_data.py           # Quick demo with 3 samples
+│   ├── demo_intervention.py          # Concept intervention examples
+│   └── intervention_analysis.py      # Systematic intervention analysis
 │
 ├── notebooks/
 │   ├── 01_cbm_training_walkthrough.ipynb  # Full training tutorial
 │   ├── 02_demo_with_sample_data.ipynb     # Quick demo (no dataset needed!)
+│   ├── 03_demo_intervention.ipynb         # Concept intervention demo
 │   └── sample_data_derm7pt/               # 3 sample cases with metadata
 │
 └── docs/                             # Detailed documentation

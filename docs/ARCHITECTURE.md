@@ -317,8 +317,8 @@ self.concept_heads = nn.ModuleList([
 ## Further Reading
 
 - [Intervention Tutorial](INTERVENTION.md) - How to use concept intervention
-- [Information Theory Guide](INFORMATION_THEORY.md) - Quantifying concept quality
 - [Training Strategies](TRAINING.md) - Advanced training techniques
+- [Datasets Guide](DATASETS.md) - Working with medical imaging datasets
 
 ---
 

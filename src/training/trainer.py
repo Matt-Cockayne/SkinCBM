@@ -10,6 +10,7 @@ Supports:
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from typing import Dict, Optional, Callable, Tuple
@@ -54,7 +55,8 @@ class CBMTrainer:
         self.training_strategy = training_strategy
         
         # Loss functions
-        self.concept_loss_fn = nn.BCEWithLogitsLoss()
+        # For multi-class concepts, we need CrossEntropyLoss per concept
+        # Concepts are flattened: [batch, num_concepts * num_classes_per_concept]
         self.task_loss_fn = nn.CrossEntropyLoss()
         self.concept_loss_weight = concept_loss_weight
         
@@ -63,7 +65,7 @@ class CBMTrainer:
         
         # Tracking
         self.train_history = {'concept_loss': [], 'task_loss': [], 'total_loss': []}
-        self.val_history = {'concept_acc': [], 'task_acc': [], 'task_f1': []}
+        self.val_history = {'concept_acc': [], 'task_acc': [], 'task_f1': [], 'concept_loss': [], 'task_loss': [], 'total_loss': []}
         self.best_val_acc = 0.0
     
     def train_epoch(self, epoch: int, use_ground_truth_concepts: bool = False) -> Dict[str, float]:
@@ -102,8 +104,23 @@ class CBMTrainer:
                 pred_concepts, task_logits = self.model(images)
             
             # Compute losses
-            # Concept loss (binary cross-entropy)
-            concept_loss = self.concept_loss_fn(pred_concepts, gt_concepts)
+            # Concept loss (multi-class classification per concept)
+            # pred_concepts: [batch, num_concepts * num_classes_per_concept]
+            # gt_concepts: [batch, num_concepts] with class indices 0-2
+            
+            batch_size = pred_concepts.size(0)
+            num_concepts = gt_concepts.size(1)
+            num_classes_per_concept = pred_concepts.size(1) // num_concepts
+            
+            # Reshape predictions to [batch * num_concepts, num_classes_per_concept]
+            pred_concepts_reshaped = pred_concepts.view(batch_size, num_concepts, num_classes_per_concept)
+            pred_concepts_reshaped = pred_concepts_reshaped.view(-1, num_classes_per_concept)
+            
+            # Flatten ground truth to [batch * num_concepts]
+            gt_concepts_flat = gt_concepts.view(-1).long()
+            
+            # Compute CrossEntropyLoss
+            concept_loss = F.cross_entropy(pred_concepts_reshaped, gt_concepts_flat)
             
             # Task loss (cross-entropy)
             task_loss = self.task_loss_fn(task_logits, labels)
@@ -145,7 +162,7 @@ class CBMTrainer:
         Evaluate model on validation/test set.
         
         Returns:
-            metrics: Dictionary with accuracy and F1 scores
+            metrics: Dictionary with accuracy, F1 scores, and losses
         """
         if dataloader is None:
             dataloader = self.val_loader
@@ -156,20 +173,45 @@ class CBMTrainer:
         all_concept_targets = []
         all_task_preds = []
         all_task_targets = []
+        total_concept_loss = 0.0
+        total_task_loss = 0.0
+        total_loss = 0.0
+        n_batches = 0
         
         with torch.no_grad():
             for images, gt_concepts, labels in dataloader:
                 images = images.to(self.device)
                 gt_concepts = gt_concepts.to(self.device)
+                labels = labels.to(self.device)
                 
                 # Forward pass
                 pred_concepts, task_logits = self.model(images)
                 
+                # Reshape concept predictions to get class predictions
+                batch_size = pred_concepts.size(0)
+                num_concepts = gt_concepts.size(1)
+                num_classes_per_concept = pred_concepts.size(1) // num_concepts
+                
+                pred_concepts_reshaped = pred_concepts.view(batch_size, num_concepts, num_classes_per_concept)
+                pred_concept_classes = pred_concepts_reshaped.argmax(dim=2)  # [batch, num_concepts]
+                
+                # Compute losses
+                pred_concepts_flat = pred_concepts_reshaped.view(-1, num_classes_per_concept)
+                gt_concepts_flat = gt_concepts.view(-1).long()
+                concept_loss = F.cross_entropy(pred_concepts_flat, gt_concepts_flat)
+                task_loss = self.task_loss_fn(task_logits, labels)
+                loss = self.concept_loss_weight * concept_loss + task_loss
+                
+                total_concept_loss += concept_loss.item()
+                total_task_loss += task_loss.item()
+                total_loss += loss.item()
+                n_batches += 1
+                
                 # Collect predictions
-                all_concept_preds.append((pred_concepts > 0.5).cpu().numpy())
+                all_concept_preds.append(pred_concept_classes.cpu().numpy())
                 all_concept_targets.append(gt_concepts.cpu().numpy())
                 all_task_preds.append(task_logits.argmax(dim=1).cpu().numpy())
-                all_task_targets.append(labels.numpy())
+                all_task_targets.append(labels.cpu().numpy())
         
         # Concatenate
         all_concept_preds = np.vstack(all_concept_preds)
@@ -188,7 +230,10 @@ class CBMTrainer:
         metrics = {
             'concept_acc': concept_acc,
             'task_acc': task_acc,
-            'task_f1': task_f1
+            'task_f1': task_f1,
+            'concept_loss': total_concept_loss / n_batches,
+            'task_loss': total_task_loss / n_batches,
+            'total_loss': total_loss / n_batches
         }
         
         return metrics
@@ -241,11 +286,18 @@ class CBMTrainer:
             self.val_history['concept_acc'].append(val_metrics['concept_acc'])
             self.val_history['task_acc'].append(val_metrics['task_acc'])
             self.val_history['task_f1'].append(val_metrics['task_f1'])
+            self.val_history['concept_loss'].append(val_metrics['concept_loss'])
+            self.val_history['task_loss'].append(val_metrics['task_loss'])
+            self.val_history['total_loss'].append(val_metrics['total_loss'])
             
             # Print progress
             print(f"Epoch {epoch}/{n_epochs}:")
             print(f"  Train - Concept Loss: {train_metrics['concept_loss']:.4f}, "
-                  f"Task Loss: {train_metrics['task_loss']:.4f}")
+                  f"Task Loss: {train_metrics['task_loss']:.4f}, "
+                  f"Total Loss: {train_metrics['total_loss']:.4f}")
+            print(f"  Val   - Concept Loss: {val_metrics['concept_loss']:.4f}, "
+                  f"Task Loss: {val_metrics['task_loss']:.4f}, "
+                  f"Total Loss: {val_metrics['total_loss']:.4f}")
             print(f"  Val   - Concept Acc: {val_metrics['concept_acc']:.4f}, "
                   f"Task Acc: {val_metrics['task_acc']:.4f}, "
                   f"Task F1: {val_metrics['task_f1']:.4f}")

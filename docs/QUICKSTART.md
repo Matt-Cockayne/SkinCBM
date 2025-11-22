@@ -35,8 +35,7 @@ python examples/train_basic_cbm.py \
     --dataset derm7pt \
     --data_path ./data \
     --epochs 20 \
-    --output_dir ./outputs/my_first_cbm \
-    --run_information_analysis
+    --output_dir ./outputs/my_first_cbm
 ```
 
 **Training time**: ~10-15 minutes on GPU, ~1 hour on CPU
@@ -104,19 +103,6 @@ new_prediction = new_logits.argmax(dim=1).item()
 
 print(f"After intervention: {new_prediction}")
 ```
-
-## View Information Analysis
-
-If you ran with `--run_information_analysis`:
-
-```bash
-cat outputs/my_first_cbm/information_analysis.json
-```
-
-Key metrics to look for:
-- **Synergy**: High (>0.1 bits) means concepts interact strongly
-- **Completeness**: High (>80%) means concepts capture most information
-- **Individual MI**: Identifies most important concepts
 
 ## Next Steps
 
@@ -204,8 +190,7 @@ python examples/train_basic_cbm.py --epochs 10 ...
 
 1. **[Architecture Guide](ARCHITECTURE.md)** - Deep dive into CBM design
 2. **[Intervention Tutorial](INTERVENTION.md)** - Master concept intervention
-3. **[Information Theory Guide](INFORMATION_THEORY.md)** - Understanding MI and synergy
-4. **[Interactive Notebooks](../notebooks/)** - Hands-on experiments
+3. **[Interactive Notebooks](../notebooks/)** - Hands-on experiments
 
 ## Benchmarking Your Model
 

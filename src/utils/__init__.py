@@ -1,21 +1,17 @@
 """SkinCBM Utilities Module"""
 
-from src.utils.information_theory import (
-    compute_mutual_information,
-    compute_concept_mi_scores,
-    compute_joint_mutual_information,
-    compute_synergy,
-    compute_concept_completeness,
-    analyze_cbm_information,
-    print_information_analysis
+from src.utils.visualization import (
+    plot_concept_predictions,
+    plot_intervention_comparison,
+    plot_concept_heatmap,
+    plot_prediction_with_concepts,
+    save_figures
 )
 
 __all__ = [
-    "compute_mutual_information",
-    "compute_concept_mi_scores",
-    "compute_joint_mutual_information",
-    "compute_synergy",
-    "compute_concept_completeness",
-    "analyze_cbm_information",
-    "print_information_analysis"
+    "plot_concept_predictions",
+    "plot_intervention_comparison",
+    "plot_concept_heatmap",
+    "plot_prediction_with_concepts",
+    "save_figures"
 ]

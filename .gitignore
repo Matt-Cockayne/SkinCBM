@@ -16,3 +16,8 @@ data/derm7pt/release_v0/
 
 # Notebooks checkpoints
 notebooks/.ipynb_checkpoints/
+
+# Output files
+outputs/
+*.pth
+*.png 

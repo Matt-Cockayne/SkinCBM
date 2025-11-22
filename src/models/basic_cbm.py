@@ -32,6 +32,7 @@ class ConceptEncoder(nn.Module):
         self,
         backbone: str = "resnet50",
         num_concepts: int = 23,
+        num_classes_per_concept: int = 3,
         concept_types: Optional[List[str]] = None,
         freeze_backbone: bool = False,
         pretrained: bool = True
@@ -39,7 +40,8 @@ class ConceptEncoder(nn.Module):
         super().__init__()
         
         self.num_concepts = num_concepts
-        self.concept_types = concept_types or ['binary'] * num_concepts
+        self.num_classes_per_concept = num_classes_per_concept
+        self.concept_types = concept_types or ['multiclass'] * num_concepts
         
         # Load pretrained backbone
         self.backbone = timm.create_model(
@@ -58,13 +60,13 @@ class ConceptEncoder(nn.Module):
             for param in self.backbone.parameters():
                 param.requires_grad = False
         
-        # Concept prediction heads
+        # Concept prediction heads - each outputs num_classes_per_concept logits
         self.concept_heads = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(backbone_dim, 512),
                 nn.ReLU(),
                 nn.Dropout(0.3),
-                nn.Linear(512, 1)
+                nn.Linear(512, num_classes_per_concept)
             )
             for _ in range(num_concepts)
         ])
@@ -77,25 +79,24 @@ class ConceptEncoder(nn.Module):
             x: Images [batch_size, 3, H, W]
             
         Returns:
-            concepts: [batch_size, num_concepts]
-                Binary concepts in [0, 1] (sigmoid output)
-                Continuous concepts are unbounded (raw logits)
+            concepts: [batch_size, num_concepts * num_classes_per_concept]
+                Softmax probabilities for each concept class
+                Reshaped to [batch_size, num_concepts, num_classes_per_concept]
         """
         # Extract features
         features = self.backbone(x)
         
         # Predict each concept
-        concept_logits = []
+        concept_probs = []
         for i, head in enumerate(self.concept_heads):
-            logit = head(features)
-            
-            # Apply sigmoid for binary concepts
-            if self.concept_types[i] == 'binary':
-                logit = torch.sigmoid(logit)
-            
-            concept_logits.append(logit)
+            logits = head(features)  # [batch, num_classes_per_concept]
+            probs = F.softmax(logits, dim=1)  # Convert to probabilities
+            concept_probs.append(probs)
         
-        concepts = torch.cat(concept_logits, dim=1)
+        # Stack into [batch, num_concepts, num_classes_per_concept]
+        concepts = torch.stack(concept_probs, dim=1)
+        # Flatten to [batch, num_concepts * num_classes_per_concept]
+        concepts = concepts.view(concepts.size(0), -1)
         return concepts
 
 
@@ -180,6 +181,7 @@ class ConceptBottleneckModel(nn.Module):
         self,
         num_concepts: int = 23,
         num_classes: int = 2,
+        num_classes_per_concept: int = 3,
         concept_types: Optional[List[str]] = None,
         backbone: str = "resnet50",
         freeze_backbone: bool = False,
@@ -189,19 +191,22 @@ class ConceptBottleneckModel(nn.Module):
         
         self.num_concepts = num_concepts
         self.num_classes = num_classes
+        self.num_classes_per_concept = num_classes_per_concept
         
         # Concept encoder
         self.concept_encoder = ConceptEncoder(
             backbone=backbone,
             num_concepts=num_concepts,
+            num_classes_per_concept=num_classes_per_concept,
             concept_types=concept_types,
             freeze_backbone=freeze_backbone,
             pretrained=pretrained
         )
         
         # Task predictor (simple linear layer)
+        # Input size is num_concepts * num_classes_per_concept (flattened concept probabilities)
         self.task_predictor = TaskPredictor(
-            num_concepts=num_concepts,
+            num_concepts=num_concepts * num_classes_per_concept,
             num_classes=num_classes
         )
     
@@ -309,6 +314,7 @@ class ConceptBottleneckModel(nn.Module):
             'model_state_dict': self.state_dict(),
             'num_concepts': self.num_concepts,
             'num_classes': self.num_classes,
+            'num_classes_per_concept': self.num_classes_per_concept,
             'concept_types': self.concept_encoder.concept_types,
         }, path)
     
@@ -320,6 +326,7 @@ class ConceptBottleneckModel(nn.Module):
         model = cls(
             num_concepts=checkpoint['num_concepts'],
             num_classes=checkpoint['num_classes'],
+            num_classes_per_concept=checkpoint.get('num_classes_per_concept', 3),  # Default to 3 for new models
             concept_types=checkpoint['concept_types'],
         )
         
@@ -340,6 +347,7 @@ def create_cbm_from_config(config: Dict) -> ConceptBottleneckModel:
     return ConceptBottleneckModel(
         num_concepts=config.get('num_concepts', 23),
         num_classes=config.get('num_classes', 2),
+        num_classes_per_concept=config.get('num_classes_per_concept', 3),
         concept_types=config.get('concept_types', None),
         backbone=config.get('backbone', 'resnet50'),
         freeze_backbone=config.get('freeze_backbone', False),

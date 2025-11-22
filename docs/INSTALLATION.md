@@ -91,7 +91,6 @@ Run the test script:
 python -c "
 from src.models.basic_cbm import ConceptBottleneckModel
 from src.data.base_loader import BaseDataLoader
-from src.utils.information_theory import compute_mutual_information
 import torch
 
 # Test model creation

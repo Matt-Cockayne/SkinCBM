@@ -21,4 +21,6 @@ notebooks/.ipynb_checkpoints/
 /notebook_cbm/
 *txt
 *.pth
-*.png 
+
+# Allow PNGs in outputs directory
+!outputs/*.png 

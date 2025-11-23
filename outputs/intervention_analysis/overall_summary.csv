@@ -1,0 +1,2 @@
+Total Samples,Original Accuracy,Avg Melanoma Prob,Avg Wrong Concepts,Cumulative Fixes Rate,Avg Cumulative Change
+395,0.8075949367088607,0.4524686,2.526582278481013,0.09873417721518987,0.07296702590013415

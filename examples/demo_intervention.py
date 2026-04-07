@@ -65,7 +65,7 @@ def run_intervention_demo(model_path):
     """Run intervention demo."""
     
     print("="*70)
-    print("Concept Intervention Demo - Matching Prediction Format")
+    print("Concept Intervention Demo")
     print("="*70)
     
     if not os.path.exists(model_path):
@@ -157,9 +157,9 @@ def run_intervention_demo(model_path):
             
             change = interv_prob - orig_prob
             crosses = (orig_prob < 0.5) != (interv_prob < 0.5)
-            marker = "🔥" if crosses else ""
-            print(f"  {marker} {concept_name:.<25} {class_labels[original_class]:>10} → {class_labels[new_class]:<10} (GT) "
-                  f"| {orig_prob:.1%} → {interv_prob:.1%} ({change:+.1%})")
+            marker = "***" if crosses else ""
+            print(f"  {marker} {concept_name:.<25} {class_labels[original_class]:>10} -> {class_labels[new_class]:<10} (GT) "
+                  f"| {orig_prob:.1%} -> {interv_prob:.1%} ({change:+.1%})")
         
         # Add cumulative intervention (all concepts corrected)
         if len(interventions_to_test) > 0:
@@ -184,11 +184,11 @@ def run_intervention_demo(model_path):
             
             change = cumulative_prob - original_prob
             crosses = (original_prob < 0.5) != (cumulative_prob < 0.5)
-            marker = "🔥" if crosses else ""
+            marker = "***" if crosses else ""
             
             concept_names_list = ", ".join([interv['name'] for interv in interventions_to_test])
             print(f"  {marker} ALL CONCEPTS CORRECTED........ "
-                  f"| {original_prob:.1%} → {cumulative_prob:.1%} ({change:+.1%})")
+                  f"| {original_prob:.1%} -> {cumulative_prob:.1%} ({change:+.1%})")
             
             # Add as special intervention
             interventions_data.append({

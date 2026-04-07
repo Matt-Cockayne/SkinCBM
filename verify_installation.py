@@ -13,20 +13,20 @@ def check_module(module_name, description):
     """Check if a module can be imported."""
     try:
         importlib.import_module(module_name)
-        print(f"✓ {description}")
+        print(f"  [OK] {description}")
         return True
     except ImportError as e:
-        print(f"✗ {description}")
-        print(f"  Error: {e}")
+        print(f"  [FAIL] {description}")
+        print(f"    Error: {e}")
         return False
 
 def check_file(filepath, description):
     """Check if a file exists."""
     if Path(filepath).exists():
-        print(f"✓ {description}")
+        print(f"  [OK] {description}")
         return True
     else:
-        print(f"✗ {description}")
+        print(f"  [FAIL] {description}")
         return False
 
 def main():
@@ -41,9 +41,9 @@ def main():
     print("Checking Python version...")
     py_version = sys.version_info
     if py_version >= (3, 8):
-        print(f"✓ Python {py_version.major}.{py_version.minor}.{py_version.micro} (>= 3.8 required)")
+        print(f"  [OK] Python {py_version.major}.{py_version.minor}.{py_version.micro} (>= 3.8 required)")
     else:
-        print(f"✗ Python {py_version.major}.{py_version.minor} (3.8+ required)")
+        print(f"  [FAIL] Python {py_version.major}.{py_version.minor} (3.8+ required)")
         all_passed = False
     print()
     
@@ -74,7 +74,7 @@ def main():
         ("src.models.basic_cbm", "CBM models"),
         ("src.data.base_loader", "Data loaders"),
         ("src.training.trainer", "Training utilities"),
-        ("src.utils.information_theory", "Information theory tools"),
+        ("src.utils.visualization", "Visualization tools"),
     ]
     
     for module, desc in skincbm_modules:
@@ -117,47 +117,46 @@ def main():
         
         # Create model
         model = ConceptBottleneckModel(num_concepts=7, num_classes=2)
-        print("✓ Model creation")
-        
+        print("  [OK] Model creation")
+
         # Test forward pass
         dummy_input = torch.randn(2, 3, 224, 224)
         concepts, logits = model(dummy_input)
         
         if concepts.shape == (2, 7) and logits.shape == (2, 2):
-            print("✓ Forward pass")
+            print("  [OK] Forward pass")
         else:
-            print("✗ Forward pass (incorrect output shapes)")
+            print("  [FAIL] Forward pass (incorrect output shapes)")
             all_passed = False
         
         # Test intervention
         concepts[:, 0] = 1.0
         new_logits = model.predict_from_concepts(concepts)
         if new_logits.shape == (2, 2):
-            print("✓ Concept intervention")
+            print("  [OK] Concept intervention")
         else:
-            print("✗ Concept intervention")
+            print("  [FAIL] Concept intervention")
             all_passed = False
             
     except Exception as e:
-        print(f"✗ Functionality test failed: {e}")
+        print(f"  [FAIL] Functionality test failed: {e}")
         all_passed = False
     print()
     
     # Final summary
     print("=" * 70)
     if all_passed:
-        print("✓ ALL CHECKS PASSED!")
+        print("ALL CHECKS PASSED")
         print()
         print("SkinCBM is correctly installed and ready to use.")
         print()
         print("Next steps:")
-        print("  1. Read GETTING_STARTED.md for a quick tutorial")
-        print("  2. Check docs/QUICKSTART.md for detailed guide")
-        print("  3. Run: python examples/train_basic_cbm.py --help")
+        print("  1. Read docs/QUICKSTART.md for a walkthrough")
+        print("  2. Run: python examples/train_basic_cbm.py --help")
         print()
         return 0
     else:
-        print("✗ SOME CHECKS FAILED")
+        print("SOME CHECKS FAILED")
         print()
         print("Please check the errors above and:")
         print("  1. Ensure all dependencies are installed: pip install -r requirements.txt")

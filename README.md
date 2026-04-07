@@ -1,291 +1,166 @@
-# SkinCBM: Concept Bottleneck Models for Interpretable Medical Diagnosis
+# SkinCBM: Concept Bottleneck Models for Interpretable Skin Lesion Diagnosis
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+An implementation of Concept Bottleneck Models (CBMs) applied to dermoscopic image classification using the 7-point checklist protocol. CBMs enforce an interpretable intermediate representation — predicted clinical concepts — through which all diagnostic reasoning must pass, enabling both model transparency and clinician-guided concept intervention at inference time.
 
-A clean, educational implementation of Concept Bottleneck Models (CBMs) for skin cancer diagnosis. This repository demonstrates how to build interpretable neural networks that reason through human-understandable concepts.
+This work builds on [Koh et al. (2020)](https://arxiv.org/abs/2007.04612) and adapts CBMs to the dermatology domain using the Derm7pt dataset.
 
-## 🎯 What is a Concept Bottleneck Model?
+## Method Overview
 
-CBMs are neural networks with a two-stage architecture that forces all reasoning through interpretable concepts:
+A CBM decomposes classification into two stages:
 
 ```
-Image → Concepts → Diagnosis Prediction
-         ↓
-    Interpretable!
-    (can intervene here)
+Image --> Concept Encoder --> Concept Predictions --> Task Predictor --> Diagnosis Prediction
+          (e.g. ResNet-50)    (7-point checklist)     (Linear layer)
 ```
 
-**Example**: Instead of directly predicting "Melanoma", the model first identifies:
-- Irregular border: 92%
-- Asymmetric shape: 78%
-- Blue-white veil: 15% ← **You can correct this!**
-- Multiple colors: 88%
+1. **Concept Encoder**: A pretrained ResNet-50 backbone with per-concept classification heads predicts the 7-point checklist attributes (pigment network, blue-whitish veil, vascular structures, streaks, pigmentation, dots/globules, regression structures).
+2. **Task Predictor**: A linear layer maps the predicted concept vector to a binary diagnosis (melanoma vs. non-melanoma). The linear architecture preserves full weight interpretability.
 
-Then uses these concepts to make the final diagnosis.
+Because the task predictor operates only on concept predictions, clinicians can *intervene* by correcting individual concept values and observing the effect on the diagnosis — a property unique to bottleneck architectures.
 
-## 🚀 Quick Start
+Three training strategies are supported:
+- **Joint**: End-to-end optimisation of concept and task losses.
+- **Sequential**: Concept encoder trained first, then frozen while the task predictor is trained.
+- **Independent**: Concept encoder and task predictor trained separately with ground-truth concepts.
 
-### Installation
-
-```bash
-# Clone and install
-cd SkinCBM
-pip install -r requirements.txt
-```
-
-### Quick Demo with Sample Data (No dataset required!)
-
-Try the CBM on 3 sample dermoscopy images:
-
-```bash
-# Run inference demo
-python3 examples/demo_sample_data.py
-
-# Test concept intervention
-python3 examples/demo_intervention.py
-
-# Or use the interactive notebooks
-jupyter notebook notebooks/02_demo_with_sample_data.ipynb
-jupyter notebook notebooks/03_demo_intervention.ipynb
-```
-
-This will show you:
-- How concepts work
-- Concept intervention
-- Model interpretability
-
-### Train on Full Dataset
-
-**Local/Interactive:**
-```bash
-# Train on full derm7pt dataset
-python3 examples/train_basic_cbm.py \
-    --data_path /home/xrai/datasets/derm7pt/release_v0 \
-    --epochs 50 \
-    --output_dir ./outputs/my_cbm
-```
-
-**HPC/SLURM:**
-```bash
-# Submit training job to GPU queue
-sbatch train_cbm.slurm
-
-# Monitor progress
-tail -f skincbm_train_*.out
-```
-
-See [HPC_TRAINING.md](HPC_TRAINING.md) for details.
-
-### Use the Trained Model
-
-```python
-from src.models.basic_cbm import ConceptBottleneckModel
-import torch
-
-# Load model
-model = ConceptBottleneckModel.load("outputs/my_first_cbm/best_model.pth")
-
-# Make prediction
-concepts, logits = model(image)
-prediction = logits.argmax(dim=1)
-
-# Intervene on concepts
-concepts[:, 2] = 1.0  # Correct a wrong concept
-new_logits = model.predict_from_concepts(concepts)
-```
-
-## 📓 Interactive Tutorial
-
-**Quick Demo** (no dataset needed):
-```bash
-jupyter notebook notebooks/02_demo_with_sample_data.ipynb
-```
-
-This notebook uses 3 sample cases to demonstrate:
-1. Loading dermoscopy images
-2. Understanding the 7-point checklist
-3. Running CBM inference
-4. Concept intervention
-5. Interpreting model weights
-
-**Full Training Walkthrough** (requires full dataset):
-```bash
-jupyter notebook notebooks/01_cbm_training_walkthrough.ipynb
-```
-
-## 🏗️ Repository Structure
+## Repository Structure
 
 ```
 SkinCBM/
 ├── src/
 │   ├── models/
-│   │   └── basic_cbm.py              # Core CBM implementation
+│   │   └── basic_cbm.py              # CBM model (encoder + predictor)
 │   ├── data/
 │   │   ├── base_loader.py            # Abstract dataset interface
-│   │   └── derm7pt_loader.py         # Derm7pt dataset loader
+│   │   ├── derm7pt_loader.py         # Derm7pt dataset loader
+│   │   └── derm7pt_adapter.py        # Adapter for derm7pt package
 │   ├── training/
-│   │   └── trainer.py                # Training utilities
+│   │   └── trainer.py                # Training loop and evaluation
 │   └── utils/
-│       └── information_theory.py     # MI, synergy, completeness
+│       └── visualization.py          # Concept and intervention plots
 │
 ├── examples/
-│   ├── train_basic_cbm.py            # Train on full dataset
-│   ├── demo_sample_data.py           # Quick demo with 3 samples
-│   ├── demo_intervention.py          # Concept intervention examples
-│   └── intervention_analysis.py      # Systematic intervention analysis
+│   ├── train_basic_cbm.py            # Training script
+│   ├── demo_sample_data.py           # Inference on sample cases
+│   ├── demo_intervention.py          # Concept intervention demo
+│   └── intervention_analysis.py      # Systematic intervention evaluation
 │
 ├── notebooks/
-│   ├── 01_cbm_training_walkthrough.ipynb  # Full training tutorial
-│   ├── 02_demo_with_sample_data.ipynb     # Quick demo (no dataset needed!)
-│   ├── 03_demo_intervention.ipynb         # Concept intervention demo
-│   └── sample_data_derm7pt/               # 3 sample cases with metadata
+│   ├── 01_cbm_training_walkthrough.ipynb
+│   ├── 02_demo_with_sample_data.ipynb
+│   ├── 03_demo_intervention.ipynb
+│   └── sample_data_derm7pt/          # Included sample cases
 │
-└── docs/                             # Detailed documentation
-    ├── INSTALLATION.md
-    ├── QUICKSTART.md
-    ├── ARCHITECTURE.md
-    └── DATASETS.md
+├── docs/
+│   ├── INSTALLATION.md
+│   ├── QUICKSTART.md
+│   ├── ARCHITECTURE.md
+│   └── DATASETS.md
+│
+└── data/
+    └── derm7pt/                      # External derm7pt dataloader package
 ```
 
-## 📚 Key Features
+## Installation
 
-### 1. Clean CBM Implementation
+Requires Python 3.8+ and PyTorch 2.0+.
 
-```python
-model = ConceptBottleneckModel(
-    num_concepts=7,
-    num_classes=2,
-    backbone='resnet50',       # Pretrained encoder
-    task_architecture='linear' # Interpretable predictor
-)
+```bash
+cd SkinCBM
+pip install -r requirements.txt
+python verify_installation.py
 ```
 
-### 2. Concept Intervention
+See [docs/INSTALLATION.md](docs/INSTALLATION.md) for environment setup details and GPU configuration.
+
+## Usage
+
+### Inference Demo (no dataset required)
+
+Four sample dermoscopy cases are included for immediate use:
+
+```bash
+python3 examples/demo_sample_data.py
+python3 examples/demo_intervention.py
+```
+
+Or via notebooks:
+```bash
+jupyter notebook notebooks/02_demo_with_sample_data.ipynb
+jupyter notebook notebooks/03_demo_intervention.ipynb
+```
+
+### Training
+
+```bash
+python3 examples/train_basic_cbm.py \
+    --data_path /path/to/derm7pt/release_v0 \
+    --epochs 50 \
+    --output_dir ./outputs/my_cbm
+```
+
+For HPC/SLURM submission, see [HPC_TRAINING.md](HPC_TRAINING.md).
+
+### Concept Intervention
+
+After training, concept values can be overridden at inference time:
 
 ```python
-# Original prediction
+from src.models.basic_cbm import ConceptBottleneckModel
+
+model = ConceptBottleneckModel.load("outputs/best_model.pth")
 concepts, logits = model(image)
-print(f"Prediction: {logits.argmax()}")  # Benign
 
-# Fix wrong concept
-concepts[:, 5] = 1.0  # "Irregular border" should be present
+# Override a concept prediction
+concepts[:, 2] = 1.0
 corrected_logits = model.predict_from_concepts(concepts)
-print(f"New prediction: {corrected_logits.argmax()}")  # Malignant
 ```
 
-### 3. Information-Theoretic Analysis
+## Dataset
 
-```python
-from src.utils.information_theory import analyze_cbm_information
+This implementation uses the **Derm7pt** dataset (~2,000 dermoscopy images with 7-point checklist annotations).
 
-# Compute MI, synergy, completeness
-results = analyze_cbm_information(model, dataloader)
-print(f"Concept completeness: {results['completeness']:.2f}")
-print(f"Synergy: {results['synergy']:.3f} bits")
-```
+- **Source**: [https://derm.cs.sfu.ca/](https://derm.cs.sfu.ca/) (academic access required)
+- **Concepts**: 7 clinical attributes, each with 3 ordinal classes (absent / regular / irregular)
+- **Task**: Binary classification (melanoma vs. non-melanoma)
 
-### 4. Flexible Training
+See [docs/DATASETS.md](docs/DATASETS.md) for download and preparation instructions.
 
-- **Joint training**: Train concepts and task predictor together (default)
-- **Sequential training**: Train concepts first, then task predictor
-- **Independent training**: Train concepts only (use external predictor)
+## Results
 
-## 🔬 Datasets
+Performance on Derm7pt (joint training, ResNet-50 backbone):
 
-### Sample Data (Included!)
+| Epochs | Concept Accuracy | Task F1 | Training Time (V100) |
+|--------|-----------------|---------|---------------------|
+| 20     | 70--75%         | 65--70% | ~5 min              |
+| 50     | 75--80%         | 68--72% | ~10 min             |
+| 100    | 75--82%         | 70--75% | ~20 min             |
 
-The repository includes 3 sample cases in `notebooks/sample_data_derm7pt/`:
-- Case 1: Basal Cell Carcinoma
-- Case 577: Melanoma  
-- Case 578: Melanoma (high 7-point score)
+The interpretability--accuracy trade-off is approximately 5 percentage points relative to a comparable black-box classifier, consistent with findings in Koh et al. (2020).
 
-Perfect for quick testing and demos without needing the full dataset!
+## Documentation
 
-### Derm7pt (Full Dataset)
+- [INSTALLATION.md](docs/INSTALLATION.md) -- Environment setup
+- [QUICKSTART.md](docs/QUICKSTART.md) -- Training walkthrough
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) -- Model design and training strategies
+- [DATASETS.md](docs/DATASETS.md) -- Data acquisition and format
 
-- **Size**: ~2,000 dermoscopy images
-- **Concepts**: 7-point checklist for melanoma diagnosis
-- **Task**: Binary classification (melanoma vs nevus)
-- **Location**: `/home/xrai/datasets/derm7pt/release_v0`
-- **Download**: See [docs/DATASETS.md](docs/DATASETS.md)
-
-### Adding Your Own Dataset
-
-```python
-from src.data.base_loader import BaseDataLoader
-
-class MyDataset(BaseDataLoader):
-    CONCEPT_NAMES = ["concept1", "concept2", ...]
-    CLASS_NAMES = ["class1", "class2"]
-    
-    def __getitem__(self, idx):
-        image = load_image(idx)
-        concepts = get_concept_labels(idx)
-        label = get_class_label(idx)
-        return image, concepts, label
-```
-
-## 📊 Expected Performance
-
-On Derm7pt dataset:
-
-| Training | Concept Acc | Task F1 | Time (V100) |
-|----------|-------------|---------|-------------|
-| 20 epochs | 70-75% | 65-70% | ~5 min |
-| 50 epochs | 75-80% | 68-72% | ~10 min |
-| 100 epochs | 75-82% | 70-75% | ~20 min |
-
-**Trade-off**: ~5% accuracy vs black-box models, but gain full interpretability + intervention capability.
-
-## 📖 Documentation
-
-For detailed guides, see the `docs/` folder:
-
-- **[INSTALLATION.md](docs/INSTALLATION.md)** - Setup instructions
-- **[QUICKSTART.md](docs/QUICKSTART.md)** - 5-minute tutorial
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Model design details
-- **[DATASETS.md](docs/DATASETS.md)** - Data loading and preparation
-
-## 🎓 Why This Repository?
-
-**Educational Focus**: Every design decision is explained with clear documentation
-
-**Production-Ready Code**: Clean, modular, well-tested implementation
-
-**Information Theory Integration**: Novel analysis tools for concept quality
-
-**Complete Pipeline**: Data loading → training → evaluation → intervention
-
-## 🤝 Contributing
-
-This is an educational repository. Contributions welcome:
-- Bug fixes or improvements
-- New dataset loaders
-- Additional documentation or examples
-
-## 📚 Citation
+## Citation
 
 ```bibtex
 @software{skincbm2025,
-  title={SkinCBM: Concept Bottleneck Models for Medical Diagnosis},
+  title={SkinCBM: Concept Bottleneck Models for Skin Lesion Diagnosis},
   author={Cockayne, Matthew J.},
   year={2025},
   url={https://github.com/Matt-Cockayne/SynergyCBM/tree/main/SkinCBM}
 }
 ```
 
-## 📄 License
+## References
 
-MIT License - see [LICENSE](LICENSE) file
+- Koh, P. W., Nguyen, T., Tang, Y. S., Mussmann, S., Pierson, E., Kim, B., & Liang, P. (2020). Concept Bottleneck Models. *ICML*. [arXiv:2007.04612](https://arxiv.org/abs/2007.04612)
+- Kawahara, J., Daneshvar, S., Argenziano, G., & Hamarneh, G. (2019). Seven-Point Checklist and Skin Lesion Classification using Multitask Multimodal Neural Nets. *IEEE JBHI*.
 
-## 🔗 References
+## License
 
-- **Original CBM Paper**: [Koh et al., 2020](https://arxiv.org/abs/2007.04612)
-- **Information Theory**: Cover & Thomas, "Elements of Information Theory"
-- **Medical AI Interpretability**: [Nature Medicine Review](https://www.nature.com/articles/s41591-021-01614-0)
-
----
-
-**Last Updated**: November 2025
+MIT License -- see [LICENSE](LICENSE).

@@ -32,8 +32,9 @@ conda_env="CBM-env"
 conda activate $conda_env
 
 # Set up paths
-export PYTHONPATH="/home/csc29/projects/SynergyCBM/SkinCBM:$PYTHONPATH"
-cd /home/csc29/projects/SynergyCBM/SkinCBM
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PYTHONPATH="${SCRIPT_DIR}:$PYTHONPATH"
+cd "${SCRIPT_DIR}"
 
 # Print system information
 echo "GPU Info:"
@@ -46,7 +47,7 @@ echo ""
 
 # Paths
 MODEL_PATH="trained_models/derm7pt_best/best_model.pth"
-DATA_PATH="/home/xrai/datasets/derm7pt/release_v0"
+DATA_PATH="${DERM7PT_DATA_PATH:-/path/to/derm7pt/release_v0}"
 OUTPUT_DIR="outputs/intervention_analysis"
 
 # Verify paths exist

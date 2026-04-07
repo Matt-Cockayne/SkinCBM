@@ -1,20 +1,19 @@
 # Citation
 
-If you use SkinCBM in your research or teaching, please cite:
+If you use SkinCBM in your research, please cite:
 
 ```bibtex
 @software{skincbm2025,
-  title={SkinCBM: Concept Bottleneck Models for Medical Image Diagnosis},
+  title={SkinCBM: Concept Bottleneck Models for Skin Lesion Diagnosis},
   author={Cockayne, Matthew J.},
   year={2025},
-  url={https://github.com/Matt-Cockayne/SynergyCBM/tree/main/SkinCBM},
-  note={Educational framework for interpretable medical AI}
+  url={https://github.com/Matt-Cockayne/SynergyCBM/tree/main/SkinCBM}
 }
 ```
 
 ## Related Work
 
-This implementation builds upon the foundational work in Concept Bottleneck Models:
+This implementation builds on the foundational CBM paper:
 
 ```bibtex
 @inproceedings{koh2020concept,
@@ -27,26 +26,15 @@ This implementation builds upon the foundational work in Concept Bottleneck Mode
 }
 ```
 
-## Acknowledgments
+## Acknowledgements
 
 - PyTorch team for the deep learning framework
 - timm library for pretrained vision models
-- scikit-learn for information theory utilities
-- The medical AI community for datasets and insights
+- scikit-learn for evaluation utilities
 
-## Academic Use
+## License
 
-This repository is designed for educational purposes. If you:
-- Use it in a course: Please share your experience!
-- Extend it for research: We'd love to hear about your work
-- Find it helpful: Star the repository and spread the word
-
-## Commercial Use
-
-While the code is MIT licensed (free for commercial use), please note:
-- Medical datasets may have their own licenses
-- Clinical deployment requires proper validation and regulatory approval
-- Consider ethical implications of medical AI systems
+The code is MIT licensed. Medical datasets may have their own access restrictions. Clinical deployment requires proper validation and regulatory approval.
 
 ## Contact
 

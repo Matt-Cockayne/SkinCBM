@@ -1,6 +1,6 @@
 # Quickstart Guide
 
-Train your first Concept Bottleneck Model in 5 minutes!
+Train a Concept Bottleneck Model in under 10 minutes.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Train your first Concept Bottleneck Model in 5 minutes!
 
 ```bash
 cd SkinCBM
-python -c "from src.models.basic_cbm import ConceptBottleneckModel; print('✓ Ready')"
+python -c "from src.models.basic_cbm import ConceptBottleneckModel; print('Ready')"
 ```
 
 ### Step 2: Prepare Data
@@ -28,7 +28,7 @@ data/derm7pt/
 └── labels.csv
 ```
 
-### Step 3: Train!
+### Step 3: Train
 
 ```bash
 python examples/train_basic_cbm.py \
@@ -179,18 +179,17 @@ python examples/train_basic_cbm.py --epochs 10 ...
 ### Poor Concept Accuracy
 - Check dataset quality
 - Increase `--concept_loss_weight`
-- Try sequential training (see [TRAINING.md](TRAINING.md))
+- Try sequential training (see [ARCHITECTURE.md](ARCHITECTURE.md#training-strategies))
 
 ### Poor Task Accuracy
 - Increase training epochs (try 50-100)
 - Adjust concept loss weight
 - Check for high synergy in information analysis (may need non-linear predictor)
 
-## Learning Resources
+## Further Reading
 
-1. **[Architecture Guide](ARCHITECTURE.md)** - Deep dive into CBM design
-2. **[Intervention Tutorial](INTERVENTION.md)** - Master concept intervention
-3. **[Interactive Notebooks](../notebooks/)** - Hands-on experiments
+1. [Architecture Guide](ARCHITECTURE.md) -- Model design and training strategies
+2. [Interactive Notebooks](../notebooks/) -- Worked examples with sample data
 
 ## Benchmarking Your Model
 
@@ -204,14 +203,7 @@ Expected performance on Derm7pt:
 
 *Times on V100 GPU with default settings*
 
-## Getting Help
+## Troubleshooting
 
-- **Examples**: Check [examples/](../examples/) for more scripts
-- **Documentation**: Read [docs/](.) for detailed guides
-- **Issues**: Report problems on GitHub
-
----
-
-**🎉 Congratulations!** You've trained your first interpretable medical AI model.
-
-Now explore the [notebooks](../notebooks/) to see what your model learned!
+- Additional example scripts are in [examples/](../examples/)
+- Detailed documentation is in the [docs/](.) directory

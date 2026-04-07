@@ -176,11 +176,11 @@ train_transform = transforms.Compose([
 ```
 
 **Recommended for medical images**:
-- ✓ Horizontal/vertical flips (lesions have no orientation)
-- ✓ Rotation (small angles, ±20°)
-- ✓ Color jitter (imaging condition variation)
-- ✗ Aggressive crops (may remove diagnostic features)
-- ✗ Extreme rotations (unrealistic)
+- Horizontal/vertical flips (lesions have no orientation)
+- Rotation (small angles, +/-20 degrees)
+- Color jitter (imaging condition variation)
+- Avoid aggressive crops (may remove diagnostic features)
+- Avoid extreme rotations (unrealistic)
 
 ## Creating Your Own Dataset
 

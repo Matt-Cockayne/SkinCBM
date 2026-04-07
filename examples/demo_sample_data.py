@@ -81,7 +81,7 @@ def run_demo(model_path):
     """Run inference demo on sample cases with improved visualizations."""
     
     print("="*70)
-    print("CBM Dermoscopy Demo - Enhanced Visualizations")
+    print("CBM Dermoscopy Demo")
     print("="*70)
     
     # Load model
@@ -146,7 +146,7 @@ def run_demo(model_path):
             gt_class = case['concepts'][i]
             pred_label = class_labels[pred_class]
             gt_label = class_labels[gt_class]
-            match = '✓' if pred_class == gt_class else '✗'
+            match = 'OK' if pred_class == gt_class else 'WRONG'
             print(f"  {name:.<30} Pred: {pred_label:<10} GT: {gt_label:<10} {match}")
         
         diagnosis_pred = "Melanoma" if melanoma_prob > 0.5 else "Non-Melanoma"
@@ -169,10 +169,10 @@ def run_demo(model_path):
         output_path = os.path.join(output_dir, f'demo_case_{case["case_num"]}.png')
         fig.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close(fig)
-        print(f"\n✓ Visualization saved: {output_path}")
+        print(f"\nVisualization saved: {output_path}")
     
     print("\n" + "="*70)
-    print("Demo complete! Enhanced visualizations saved to outputs/")
+    print("Demo complete. Visualizations saved to outputs/")
     print("="*70)
 
 

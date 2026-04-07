@@ -22,7 +22,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Verify installation
-python -c "from src.models.basic_cbm import ConceptBottleneckModel; print('✓ Installation successful!')"
+python -c "from src.models.basic_cbm import ConceptBottleneckModel; print('Installation successful')"
 ```
 
 ## Detailed Installation Steps
@@ -95,14 +95,14 @@ import torch
 
 # Test model creation
 model = ConceptBottleneckModel(num_concepts=7, num_classes=2)
-print('✓ Model creation successful')
+print('Model creation successful')
 
 # Test forward pass
 dummy_input = torch.randn(2, 3, 224, 224)
 concepts, logits = model(dummy_input)
-print(f'✓ Forward pass successful: {concepts.shape}, {logits.shape}')
+print(f'Forward pass successful: {concepts.shape}, {logits.shape}')
 
-print('\n🎉 Installation verified!')
+print('\nInstallation verified.')
 "
 ```
 

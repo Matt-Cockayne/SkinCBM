@@ -1,6 +1,6 @@
 # CBM Architecture Guide
 
-A comprehensive guide to understanding Concept Bottleneck Models.
+This document describes the design and implementation of Concept Bottleneck Models as used in SkinCBM.
 
 ## Table of Contents
 
@@ -256,7 +256,7 @@ self.concept_heads = nn.ModuleList([
 
 ## Advantages and Limitations
 
-### Advantages ✓
+### Advantages
 
 1. **Interpretability**
    - See which concepts drove each prediction
@@ -278,7 +278,7 @@ self.concept_heads = nn.ModuleList([
    - Identify which concepts are most important
    - Guide future dataset collection
 
-### Limitations ✗
+### Limitations
 
 1. **Performance Gap**
    - Typically 3-7% lower accuracy than black-box models
@@ -302,13 +302,13 @@ self.concept_heads = nn.ModuleList([
 
 ## When to Use CBMs
 
-### Good Use Cases ✓
+### Suitable Applications
 - Medical diagnosis (high stakes, need interpretability)
 - Regulated domains (must explain decisions)
 - Human-in-the-loop systems (leverage intervention)
 - Scientific discovery (understand what matters)
 
-### Poor Use Cases ✗
+### Less Suitable Applications
 - Performance-critical applications (object detection, etc.)
 - No concept annotations available
 - Concepts hard to define (abstract tasks)
@@ -316,10 +316,8 @@ self.concept_heads = nn.ModuleList([
 
 ## Further Reading
 
-- [Intervention Tutorial](INTERVENTION.md) - How to use concept intervention
-- [Training Strategies](TRAINING.md) - Advanced training techniques
-- [Datasets Guide](DATASETS.md) - Working with medical imaging datasets
+- [Datasets Guide](DATASETS.md) -- Working with medical imaging datasets
 
 ---
 
-**Summary**: CBMs trade ~5% accuracy for full interpretability and intervention capabilities. They're ideal for high-stakes medical applications where understanding *why* a model made a prediction is as important as the prediction itself.
+CBMs trade approximately 5% accuracy for full interpretability and intervention capabilities. They are well suited for high-stakes medical applications where understanding model reasoning is as important as the prediction itself.

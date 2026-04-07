@@ -310,7 +310,7 @@ class CBMTrainer:
                 
                 checkpoint_path = os.path.join(save_dir, 'best_model.pth')
                 self.model.save(checkpoint_path)
-                print(f"  ✓ New best model saved (F1: {self.best_val_acc:.4f})")
+                print(f"  New best model saved (F1: {self.best_val_acc:.4f})")
             else:
                 patience_counter += 1
             

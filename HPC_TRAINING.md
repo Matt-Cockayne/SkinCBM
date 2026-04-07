@@ -4,7 +4,7 @@
 
 Submit the training job:
 ```bash
-cd /home/csc29/projects/SynergyCBM/SkinCBM
+cd /path/to/SkinCBM
 sbatch train_cbm.slurm
 ```
 
@@ -23,7 +23,7 @@ tail -f skincbm_train_*.err
 ## What It Does
 
 The SLURM script trains a Concept Bottleneck Model on the Derm7pt dataset with:
-- **Dataset**: 2,000 dermoscopy images from `/home/xrai/datasets/derm7pt/release_v0`
+- **Dataset**: 2,000 dermoscopy images from the Derm7pt release
 - **Concepts**: 7-point checklist (pigment network, blue-whitish veil, etc.)
 - **Architecture**: ResNet50 backbone + Linear task predictor
 - **Training**: 50 epochs, ~10 minutes on V100 GPU
@@ -93,7 +93,7 @@ Reduce batch size in the script:
 ### Dataset Not Found
 Verify the dataset path:
 ```bash
-ls /home/xrai/datasets/derm7pt/release_v0/images/*.jpg | wc -l
+ls $DATA_PATH/images/*.jpg | wc -l
 # Should show ~2000 images
 ```
 
@@ -118,7 +118,7 @@ Edit `train_cbm.slurm` to change:
 For a quick test (10 epochs, ~2 minutes):
 ```bash
 python3 examples/train_basic_cbm.py \
-    --data_path /home/xrai/datasets/derm7pt/release_v0 \
+    --data_path $DATA_PATH \
     --epochs 10 \
     --batch_size 16 \
     --output_dir ./outputs/quick_test

@@ -14,7 +14,6 @@ from typing import List, Tuple, Optional
 # Add parent 'data' directory to path so derm7pt can be imported as a package
 data_paths = [
     os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data')),
-    '/home/csc29/projects/SynergyCBM/SkinCBM/data'
 ]
 
 DERM7PT_AVAILABLE = False
@@ -26,7 +25,7 @@ for data_path in data_paths:
             from derm7pt.dataset import Derm7PtDatasetGroupInfrequent
             import pandas as pd
             DERM7PT_AVAILABLE = True
-            print(f"✓ Loaded derm7pt module from: {data_path}")
+            print(f"Loaded derm7pt module from: {data_path}")
             break
         except ImportError as e:
             print(f"Warning: Failed to import from {data_path}: {e}")
@@ -58,13 +57,13 @@ class Derm7ptCBMAdapter(Dataset):
     
     def __init__(
         self,
-        data_path: str = "/home/xrai/datasets/derm7pt/release_v0",
+        data_path: str = os.environ.get("DERM7PT_DATA_PATH", "./data/derm7pt/release_v0"),
         split: str = 'train',
         image_size: Tuple[int, int] = (224, 224)
     ):
         """
         Args:
-            data_path: Path to derm7pt release_v0 directory
+            data_path: Path to derm7pt release_v0 directory (or set DERM7PT_DATA_PATH env var)
             split: 'train', 'valid', or 'test'
             image_size: Size to resize images to
         """
@@ -218,7 +217,7 @@ class Derm7ptCBMAdapter(Dataset):
 
 
 def create_derm7pt_dataloaders(
-    data_path: str = "/home/xrai/datasets/derm7pt/release_v0",
+    data_path: str = os.environ.get("DERM7PT_DATA_PATH", "./data/derm7pt/release_v0"),
     batch_size: int = 16,
     num_workers: int = 4,
     image_size: Tuple[int, int] = (224, 224),

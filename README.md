@@ -119,7 +119,6 @@ corrected_logits = model.predict_from_concepts(concepts)
 The figure below shows a melanoma case (Case 578) initially misclassified as non-melanoma at 34.5% confidence. Correcting three mispredicted concepts, pigment network, streaks, and blue-whitish veil, shifts the diagnosis prediction to melanoma at 68.1%.
 
 ![Concept intervention example on Case 578](outputs/intervention_case_578.png)
-```
 
 ## Dataset
 
